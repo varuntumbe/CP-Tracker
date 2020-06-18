@@ -31,15 +31,6 @@ def createtable():
     conn.commit()
     cur.close()
 
-def get_foreign_key(table_name,attribute,attribute_match):
-    cur=conn.cursor()
-    #getting foreign key
-    cur.execute(""" 
-    SELECT * FROM (?) WHERE (?)=(?)
-    """,(table_name,attribute,attribute_match))
-    li=cur.fetchall()
-    return li[0][0]
-
 
 #Function to insert data record
 def data_entry(date,no_prob_solved,plateform):
@@ -72,7 +63,7 @@ def data_entry(date,no_prob_solved,plateform):
         cur.execute("""UPDATE Trackdate SET tpd=(?) WHERE date=(?)""",(no_prob_solved_per_day+no_prob_solved,date))
 
 
-    #getting foriegn key
+    #getting foriegn key                      TODO-2 making get_foreignkey function
     cur.execute("""SELECT * FROM Plateform WHERE plateform_name=(?)""",(plateform,))
     li=cur.fetchall()
     plateform_id=li[0][0]
@@ -102,36 +93,21 @@ def data_entry(date,no_prob_solved,plateform):
 
 
 
-
-
-#Function to insert more than one data record
-def manydata_entry():
-    conn=sqlite3.connect('./database/mini.db')
-    cur=conn.cursor()
-    dataset=list()
-    print("Enter multiple datasets and enter 'finish' to exit and 'continue' to continue: ")
-    t=tuple()
-    switch=str()
-    while switch !='finish':
-        print('Enter data')
-        t=input().split()
-        dataset.append(t)
-        switch=input()
-    cur.executemany("""
-    INSERT INTO Coderecord (date,plateform,noprobsolved)
-    VALUES(?,?,?)
-    """,dataset)
-    conn.commit()
-    conn.close()
-
 #Function to read the data of database so far
-def read_database():
-    conn=sqlite3.connect('./database/mini.db')
+def read_database(date):
     cur=conn.cursor()
-    cur.execute('SELECT rowid,* FROM Coderecord ORDER BY noprobsolved DESC')
-    recli=cur.fetchall()
-    for rec in recli:
-        print("{}\t{}\t{}\t{}".format(rec[0],rec[1],rec[2],rec[3])) 
+    cur.execute(""" SELECT date,no_prob_solved,plateform_name FROM Trackdate
+JOIN Record JOIN Plateform on Trackdate.id=trackdate_id AND date=(?)
+AND Plateform.id=plateform_id""",(date,))
+    li=cur.fetchall()
+    if len(li)==0:
+        print('You havent done a single problem that day!!')
+    else:
+        t_number_prob=0
+        for el in li:
+            print('{}\t{}\t{}'.format(el[0],el[1],el[2]))
+            t_number_prob+=el[1]
+        print('Total number of problems solved : ',t_number_prob)
     conn.close()
 
 #Function to update the database
@@ -161,11 +137,12 @@ def delete_table():
 
 
 createtable()
-data_entry('2020-6-18',5,'codechef')
-data_entry('2020-6-18',3,'codeforce')
-data_entry('2020-6-18',1,'hackerrank')
-data_entry('2020-6-18',4,'codeforce')
-data_entry('2020-6-19',11,'codeforce')
-data_entry('2020-8-21',5,'hackerrank')
+# data_entry('2020-6-18',5,'codechef')
+# data_entry('2020-6-18',3,'codeforce')
+# data_entry('2020-6-18',1,'hackerrank')
+# data_entry('2020-6-18',4,'codeforce')
+# data_entry('2020-6-19',11,'codeforce')
+# data_entry('2020-8-21',5,'hackerrank')
+read_database('2020-6-18')
 #closes the connection
 conn.close()
