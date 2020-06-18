@@ -1,6 +1,6 @@
 import sqlite3
 
-conn=sqlite3.connect('./database/mini.db')
+conn=sqlite3.connect('databasefile.db')
 
 #cur contains database object (in perticular cursor object)
 #cur=conn.cursor()
@@ -9,30 +9,54 @@ def createtable():
     cur=conn.cursor() 
     cur.executescript(""" 
     CREATE TABLE IF NOT EXISTS Record(
-        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-        date DATE,
         no_prob_solved INTEGER,
-        plateform_id INTEGER 
+        plateform_id INTEGER NOT NULL,
+        trackdate_id INTEGER NOT NULL,
+        PRIMARY KEY (plateform_id,trackdate_id) 
     );
     CREATE TABLE IF NOT EXISTS  Plateform(
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
         plateform_name TEXT UNIQUE,
         npspp INTEGER
     );
+    CREATE TABLE IF NOT EXISTS Trackdate(
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+        date DATE,
+        tpd INTEGER
+    )
     """)
+
+    # total number of problems solved that day (tnpstd->tpd)
     #no_prob_solved_per_plateform(npspp)
     conn.commit()
     cur.close()
 
 #Function to insert data record
-def data_entry():
-    conn=sqlite3.connect('./database/mini.db')
+def data_entry(date,no_prob_solved,plateform):
     cur=conn.cursor()
-    d,p,n=input("""Enter todays coding record : """).split()
-    n=int(n)
-    cur.execute("""INSERT INTO Coderecord (date,plateform,noprobsolved)
-    VALUES(?,?,?)
-    """,(d,p,n))
+    no_prob_solved=int(no_prob_solved)
+    #First insert to plateform table
+    cur.execute('SELECT * FROM Plateform WHERE plateform_name=(?)',(plateform,))
+    li=cur.fetchall()
+    #there is no row which has current plateform name (its new and i have to insert) 
+
+    if len(li)==0:
+        cur.execute("""INSERT INTO Plateform (plateform_name,npspp)
+        VALUES (?,?)""",(plateform,no_prob_solved))
+    else:
+        #there exist a row with that perticular plateform name (i have to update)
+        no_probs_already_done=li[0][2]
+        cur.execute("""UPDATE Plateform SET npspp=(?) WHERE plateform_name=(?)""",(no_probs_already_done+no_prob_solved,plateform))
+
+    #inserting data in record table
+
+    #getting foriegn key
+    cur.execute("""SELECT * FROM Plateform WHERE plateform_name=(?)""",(plateform,))
+    li=cur.fetchall()
+    foriegn_key=li[0][0]
+
+    #adding the data in to record table(now we have the foriegn key also)
+    cur.execute("""""")
     conn.commit()
     cur.close()
 
