@@ -21,7 +21,7 @@ def createtable():
     );
     CREATE TABLE IF NOT EXISTS Trackdate(
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-        date DATE,
+        date TEXT,
         tpd INTEGER
     )
     """)
@@ -30,6 +30,16 @@ def createtable():
     #no_prob_solved_per_plateform(npspp)
     conn.commit()
     cur.close()
+
+def get_foreign_key(table_name,attribute,attribute_match):
+    cur=conn.cursor()
+    #getting foreign key
+    cur.execute(""" 
+    SELECT * FROM (?) WHERE (?)=(?)
+    """,(table_name,attribute,attribute_match))
+    li=cur.fetchall()
+    return li[0][0]
+
 
 #Function to insert data record
 def data_entry(date,no_prob_solved,plateform):
@@ -45,20 +55,54 @@ def data_entry(date,no_prob_solved,plateform):
         VALUES (?,?)""",(plateform,no_prob_solved))
     else:
         #there exist a row with that perticular plateform name (i have to update)
-        no_probs_already_done=li[0][2]
-        cur.execute("""UPDATE Plateform SET npspp=(?) WHERE plateform_name=(?)""",(no_probs_already_done+no_prob_solved,plateform))
+        no_probs_done_on_plateform=li[0][2]
+        cur.execute("""UPDATE Plateform SET npspp=(?) WHERE plateform_name=(?)""",(no_probs_done_on_plateform+no_prob_solved,plateform))
 
-    #inserting data in record table
+    #HERE WE CAN CREATE FUNCTION FOR INSERT OR UPDATE COMMAND(OPPORTUNITY TO MODULERISE THE CODE)    TODO-1
+
+    #inserting in Track table
+    cur.execute('SELECT * FROM Trackdate WHERE date=(?)',(date,))
+    li=cur.fetchall()
+
+    if len(li)==0:
+        cur.execute(""" INSERT INTO Trackdate (date,tpd)
+        VALUES(?,?)""",(date,no_prob_solved))
+    else:
+        no_prob_solved_per_day=li[0][2]
+        cur.execute("""UPDATE Trackdate SET tpd=(?) WHERE date=(?)""",(no_prob_solved_per_day+no_prob_solved,date))
+
 
     #getting foriegn key
     cur.execute("""SELECT * FROM Plateform WHERE plateform_name=(?)""",(plateform,))
     li=cur.fetchall()
-    foriegn_key=li[0][0]
+    plateform_id=li[0][0]
+    #plateform_id=get_foreign_key('Plateform','plateform_name',plateform)
+    #trackdate_id=get_foreign_key('Trackdate','date',date)
+    cur.execute("""SELECT * FROM Trackdate WHERE date=(?)""",(date,))
+    li=cur.fetchall()
+    trackdate_id=li[0][0]
 
-    #adding the data in to record table(now we have the foriegn key also)
-    cur.execute("""""")
+    print('plate form id : ',plateform_id,'\n','trackdate id : ',trackdate_id,)
+    # insertin in record table
+    cur.execute('SELECT * FROM Record WHERE plateform_id=(?) AND trackdate_id=(?)',(plateform_id,trackdate_id))
+    li=cur.fetchall()
+    print(li,'\n')
+    if len(li)==0:
+        cur.execute("""INSERT INTO Record (no_prob_solved,plateform_id,trackdate_id)
+        VALUES(?,?,?)""",(no_prob_solved,plateform_id,trackdate_id))
+    else:
+        no_prob_solved_per_plateform=li[0][0]
+        cur.execute("""UPDATE Record SET no_prob_solved=(?) WHERE plateform_id=(?) AND trackdate_id=(?)
+        """,(no_prob_solved_per_plateform+no_prob_solved,plateform_id,trackdate_id))
+
     conn.commit()
     cur.close()
+
+
+
+
+
+
 
 #Function to insert more than one data record
 def manydata_entry():
@@ -117,5 +161,11 @@ def delete_table():
 
 
 createtable()
+data_entry('2020-6-18',5,'codechef')
+data_entry('2020-6-18',3,'codeforce')
+data_entry('2020-6-18',1,'hackerrank')
+data_entry('2020-6-18',4,'codeforce')
+data_entry('2020-6-19',11,'codeforce')
+data_entry('2020-8-21',5,'hackerrank')
 #closes the connection
 conn.close()
