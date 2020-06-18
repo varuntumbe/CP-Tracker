@@ -1,20 +1,26 @@
 import sqlite3
 
-#conn=sqlite3.connect('./database/mini.db')
+conn=sqlite3.connect('./database/mini.db')
 
 #cur contains database object (in perticular cursor object)
 #cur=conn.cursor()
 
 def createtable():
-    conn=sqlite3.connect('./database/mini.db')
     cur=conn.cursor() 
-    cur.execute(""" 
-    CREATE TABLE IF NOT EXISTS Coderecord(
+    cur.executescript(""" 
+    CREATE TABLE IF NOT EXISTS Record(
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
         date DATE,
-        plateform VARCHAR(128),
-        noprobsolved INT
-    )
+        no_prob_solved INTEGER,
+        plateform_id INTEGER 
+    );
+    CREATE TABLE IF NOT EXISTS  Plateform(
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+        plateform_name TEXT UNIQUE,
+        npspp INTEGER
+    );
     """)
+    #no_prob_solved_per_plateform(npspp)
     conn.commit()
     cur.close()
 
@@ -86,6 +92,6 @@ def delete_table():
     conn.close()
 
 
-
+createtable()
 #closes the connection
-#conn.close()
+conn.close()
