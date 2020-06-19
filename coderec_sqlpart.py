@@ -73,11 +73,9 @@ def data_entry(date,no_prob_solved,plateform):
     li=cur.fetchall()
     trackdate_id=li[0][0]
 
-    print('plate form id : ',plateform_id,'\n','trackdate id : ',trackdate_id,)
     # insertin in record table
     cur.execute('SELECT * FROM Record WHERE plateform_id=(?) AND trackdate_id=(?)',(plateform_id,trackdate_id))
     li=cur.fetchall()
-    print(li,'\n')
     if len(li)==0:
         cur.execute("""INSERT INTO Record (no_prob_solved,plateform_id,trackdate_id)
         VALUES(?,?,?)""",(no_prob_solved,plateform_id,trackdate_id))
@@ -176,26 +174,26 @@ def delete_a_record_in_databse(date):
     conn.close()
 
 
-
-
-
 #Function to drop table(deletes whole table)
 def delete_table():
-    conn=sqlite3.connect('./database/mini.db')
     cur=conn.cursor()
-    cur.execute('DROP TABLE Coderecord')
+    cur.executescript(""" 
+    DROP TABLE Record;
+    DROP TABLE Trackdate;
+    DROP TABLE Plateform;
+    """)
     conn.commit()
     conn.close()
 
 
 createtable()
-# data_entry('2020-6-18',5,'codechef')
-# data_entry('2020-6-18',3,'codeforce')
-# data_entry('2020-6-18',1,'hackerrank')
-# data_entry('2020-6-18',4,'codeforce')
-# data_entry('2020-6-19',11,'codeforce')
-# data_entry('2020-8-21',5,'hackerrank')
+data_entry('2020-6-18',5,'codechef')
+data_entry('2020-6-18',3,'codeforce')
+data_entry('2020-6-18',1,'hackerrank')
+data_entry('2020-6-18',4,'codeforce')
+data_entry('2020-6-19',11,'codeforce')
+data_entry('2020-8-21',5,'hackerrank')
 #update_databse('2020-6-18')
-delete_a_record_in_databse('2020-6-18')
+#delete_table()
 #closes the connection
 conn.close()
