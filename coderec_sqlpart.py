@@ -89,10 +89,6 @@ def data_entry(date,no_prob_solved,plateform):
     conn.commit()
     cur.close()
 
-
-
-
-
 #Function to read the data of database so far
 def read_database(date):
     cur=conn.cursor()
@@ -110,13 +106,49 @@ AND Plateform.id=plateform_id""",(date,))
         print('Total number of problems solved : ',t_number_prob)
     conn.close()
 
+
+
 #Function to update the database
-def update_databse():
-    conn=sqlite3.connect('./database/mini.db')
+def update_databse(date):
     cur=conn.cursor()
-    cur.execute('UPDATE Coderecord SET noprobsolved=(?) WHERE rowid=(?)',(10,2))
+    plateform=input('Enter the plateform in which you want to update : ')
+    no_prob=int(input('no of problems you want to update on {} at {} : '.format(plateform,date)))
+
+    #getting platefrom_id
+    cur.execute("""SELECT * FROM Plateform WHERE plateform_name=(?)""",(plateform,))
+    li=cur.fetchall()
+    plateform_id=li[0][0]
+    current_plateform_score=li[0][2]
+
+    #getting track_id
+    cur.execute("""SELECT * FROM Trackdate WHERE date=(?)""",(date,))
+    li=cur.fetchall()
+    trackdate_id=li[0][0]
+    current_total_score=li[0][2]
+
+    #getting the diffence
+    cur.execute(""" SELECT * FROM Record WHERE plateform_id=(?) AND trackdate_id=(?)""",(plateform_id,trackdate_id))
+    li=cur.fetchall()
+    dif=no_prob-li[0][0]
+    currrent_prob_solved=li[0][0]
+
+    #updating the value in every table
+    cur.execute("""UPDATE Record SET no_prob_solved=(?) WHERE plateform_id=(?) AND trackdate_id=(?)
+    """,(currrent_prob_solved+dif,plateform_id,trackdate_id))
+
+    cur.execute("""UPDATE Plateform SET npspp=(?) WHERE plateform_name=(?)""",(current_plateform_score+dif,plateform,))
+
+    cur.execute("""UPDATE Trackdate SET tpd=(?) WHERE date=(?) """,(current_total_score+dif,date))
+
     conn.commit()
     conn.close()
+
+
+
+
+
+
+
 
 #Function to delete a record in database
 def delete_databse():
@@ -143,6 +175,6 @@ createtable()
 # data_entry('2020-6-18',4,'codeforce')
 # data_entry('2020-6-19',11,'codeforce')
 # data_entry('2020-8-21',5,'hackerrank')
-read_database('2020-6-18')
+update_databse('2020-6-18')
 #closes the connection
 conn.close()
