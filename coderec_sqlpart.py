@@ -144,20 +144,40 @@ def update_databse(date):
     conn.close()
 
 
-
-
-
-
-
-
 #Function to delete a record in database
-def delete_databse():
-    conn=sqlite3.connect('./database/mini.db')
+def delete_a_record_in_databse(date):
     cur=conn.cursor()
-    d=int(input('Enter rowid which has to be removed : '))
-    cur.execute('DELETE FROM Coderecord WHERE rowid=(?)',(d,))
+
+    #getting the trackdate_id
+    cur.execute("""SELECT * FROM Trackdate WHERE date=(?)""",(date,))
+    li=cur.fetchall()
+    trackdate_id=li[0][0]
+
+
+    #getting all the problems that you have done that day
+    cur.execute("""SELECT * FROM Record WHERE trackdate_id=(?)""",(trackdate_id,))
+    li=cur.fetchall()
+    di=dict()
+    for tu in li:
+        di[tu[1]]=tu[0]
+    
+    #getting 
+
+    #deleted everythig with respect to the given date in record table 
+    cur.execute(""" DELETE FROM Record  WHERE trackdate_id=(?)""",(trackdate_id,))
+
+    #dleted the record with resepct to the given date in trackdate table
+    cur.execute(""" DELETE FROM Trackdate WHERE date=(?)""",(date,))
+
+    #updating plateform table
+    for key in list(di.keys()):
+        cur.execute("""UPDATE Plateform SET npspp=npspp-(?) WHERE id=(?)""",(di[key],key))
     conn.commit()
     conn.close()
+
+
+
+
 
 #Function to drop table(deletes whole table)
 def delete_table():
@@ -175,6 +195,7 @@ createtable()
 # data_entry('2020-6-18',4,'codeforce')
 # data_entry('2020-6-19',11,'codeforce')
 # data_entry('2020-8-21',5,'hackerrank')
-update_databse('2020-6-18')
+#update_databse('2020-6-18')
+delete_a_record_in_databse('2020-6-18')
 #closes the connection
 conn.close()
