@@ -1,11 +1,12 @@
 import sqlite3
 
-conn=sqlite3.connect('databasefile.db')
+#conn=sqlite3.connect('databasefile.db')
 
 #cur contains database object (in perticular cursor object)
 #cur=conn.cursor()
 
 def createtable():
+    conn=sqlite3.connect('databasefile.db')
     cur=conn.cursor() 
     cur.executescript(""" 
     CREATE TABLE IF NOT EXISTS Record(
@@ -34,6 +35,7 @@ def createtable():
 
 #Function to insert data record
 def data_entry(date,no_prob_solved,plateform):
+    conn=sqlite3.connect('databasefile.db')
     cur=conn.cursor()
     no_prob_solved=int(no_prob_solved)
     #First insert to plateform table
@@ -89,6 +91,7 @@ def data_entry(date,no_prob_solved,plateform):
 
 #Function to read the data of database so far
 def read_database(date):
+    conn=sqlite3.connect('databasefile.db')
     cur=conn.cursor()
     cur.execute(""" SELECT date,no_prob_solved,plateform_name FROM Trackdate
 JOIN Record JOIN Plateform on Trackdate.id=trackdate_id AND date=(?)
@@ -108,6 +111,7 @@ AND Plateform.id=plateform_id""",(date,))
 
 #Function to update the database
 def update_databse(date):
+    conn=sqlite3.connect('databasefile.db')
     cur=conn.cursor()
     plateform=input('Enter the plateform in which you want to update : ')
     no_prob=int(input('no of problems you want to update on {} at {} : '.format(plateform,date)))
@@ -144,6 +148,7 @@ def update_databse(date):
 
 #Function to delete a record in database
 def delete_a_record_in_databse(date):
+    conn=sqlite3.connect('databasefile.db')
     cur=conn.cursor()
 
     #getting the trackdate_id
@@ -176,6 +181,7 @@ def delete_a_record_in_databse(date):
 
 #Function to drop table(deletes whole table)
 def delete_table():
+    conn=sqlite3.connect('databasefile.db')
     cur=conn.cursor()
     cur.executescript(""" 
     DROP TABLE Record;
@@ -186,14 +192,24 @@ def delete_table():
     conn.close()
 
 
-createtable()
-data_entry('2020-6-18',5,'codechef')
-data_entry('2020-6-18',3,'codeforce')
-data_entry('2020-6-18',1,'hackerrank')
-data_entry('2020-6-18',4,'codeforce')
-data_entry('2020-6-19',11,'codeforce')
-data_entry('2020-8-21',5,'hackerrank')
-#update_databse('2020-6-18')
-#delete_table()
-#closes the connection
-conn.close()
+def get_list_of_data():
+    conn=sqlite3.connect('databasefile.db')
+    cur=conn.cursor()
+    cur.execute(""" SELECT * FROM Trackdate""")
+    li=cur.fetchall()
+    conn.close()
+    return [(t[1],t[2]) for t in li]
+
+
+
+if __name__ == "__main__":
+    createtable()
+    # data_entry('2020-6-18',5,'codechef')
+    # data_entry('2020-6-18',3,'codeforce')
+    # data_entry('2020-6-18',1,'hackerrank')
+    # data_entry('2020-6-18',4,'codeforce')
+    # data_entry('2020-6-19',11,'codeforce')
+    # data_entry('2020-8-21',5,'hackerrank')
+    #update_databse('2020-6-18')
+    #delete_table()
+    #closes the connection
